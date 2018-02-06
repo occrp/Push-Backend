@@ -46,7 +46,7 @@ do
             break
             ;;
         "Joomla!")
-            cms='Joomla';
+            cms='occrp-joomla';
             break
             ;;
         "Codeignitor")
