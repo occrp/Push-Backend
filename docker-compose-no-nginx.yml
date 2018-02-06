@@ -5,7 +5,7 @@ services:
   # nginx, working as a front-end proxy for uniqush
   # we need it for only allowing certain endpoints to be available
   db:
-    image: postgres
+    image: postgres:9.6
     volumes:
       - "./.docker/postgres:/data/postgres"
     environment:
