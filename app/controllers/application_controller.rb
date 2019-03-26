@@ -139,12 +139,10 @@ class ApplicationController < ActionController::Base
     link_host = link_uri.host.gsub('www.', '')
     base_host = base_uri.host.gsub('www.', '')
     
-<<<<<<< HEAD
-    if(link_host == base_host)
-=======
+
     # We check if there's optional urls listed in the secret.env file
     if(link_host == base_host || allowed_proxy_hosts().include?(link_host))
->>>>>>> drupal
+
       return true
     else
       logger.info("Invalid image proxy request #{link_host} vs. #{base_host}")
