@@ -5,8 +5,10 @@ class ApplicationController < ActionController::Base
   
   # Set the cms mode for all controller requests
   before_action :check_for_valid_cms_mode
+  DOUBLE_ESCAPED_EXPR = /%25([0-9a-f]{2})/i
 
 
+  Figaro.load
   #This is just a passthrough for basic GET commands. Takes a URL, calls it, and returns the body.
   #This should conceivably cache responses at some point
   #Should also require auth token
@@ -39,10 +41,44 @@ class ApplicationController < ActionController::Base
     end
   end
   
+  
+
+
+
+
   def passthrough_image url
     cached = true
+<<<<<<< HEAD
     image_response = Rails.cache.fetch(url, expires_in: 5.minutes) do
       raw_response = HTTParty.get(url)
+=======
+
+    image_response = Rails.cache.fetch(url, expires_in: 5.minutes) do
+      url_encoded = url
+      if url_encoded == URI.encode(url_encoded).gsub(DOUBLE_ESCAPED_EXPR, '%\1') 
+        while url_encoded != URI.decode(url_encoded) do
+          url_encoded = URI.decode(url_encoded)
+        end
+      
+      else 
+        while url_encoded != URI.encode(url_encoded).gsub(DOUBLE_ESCAPED_EXPR, '%\1') do
+          #byebug
+          url_encoded = URI.encode(url_encoded).gsub(DOUBLE_ESCAPED_EXPR, '%\1')
+        end
+          
+      end
+      url_encoded = URI.encode(url_encoded).gsub(DOUBLE_ESCAPED_EXPR, '%\1')
+        
+      raw_response = HTTParty.get(url_encoded,:verify => false)
+      content_type = raw_response.headers['content-type']
+      
+
+      if (content_type.blank?)
+       fm = FileMagic.new(FileMAgic::MAGIC_MIME)
+       mime_type = fm.buffer(raw_response.body) 
+       content_type = mime_type
+      end
+>>>>>>> drupal
       image_response = {body: raw_response.body, content_type: raw_response.headers['content-type']}
       cached = false
       image_response
@@ -65,6 +101,8 @@ class ApplicationController < ActionController::Base
         @cms_mode = :cins_codeigniter
       when "blox"
         @cms_mode = :blox
+      when "drupal"
+        @cms_mode = :drupal
       else
         raise "CMS type #{ENV['cms_mode']} not valid for this version of Push."
     end
@@ -82,6 +120,8 @@ class ApplicationController < ActionController::Base
       url = ENV['codeigniter_url']
     when "blox"
       url = ENV['blox_url']
+    when "drupal"
+      url = ENV['drupal_url']
     else
       raise "CMS type #{ENV['cms_mode']} not valid for this version of Push."
     end
@@ -102,15 +142,18 @@ class ApplicationController < ActionController::Base
     link_host = link_uri.host.gsub('www.', '')
     base_host = base_uri.host.gsub('www.', '')
     
+<<<<<<< HEAD
     if(link_host == base_host)
+=======
+    # We check if there's optional urls listed in the secret.env file
+    if(link_host == base_host || allowed_proxy_hosts().include?(link_host))
+>>>>>>> drupal
       return true
     else
       logger.info("Invalid image proxy request #{link_host} vs. #{base_host}")
     end
-    
-    # We check if there's optional urls listed in the secret.env file
-    
-    return true if allowed_proxy_hosts().include?(link_host)
+
+    logger.info("Invalid image proxy request #{link_host} vs. #{base_host}")  
     return false
   end
   
@@ -122,6 +165,7 @@ class ApplicationController < ActionController::Base
     allowed_proxy_subdomains = allowed_proxy_subdomains.gsub(']', '')
     allowed_hosts = allowed_proxy_subdomains.split(',')
     allowed_hosts.map!{|host| host.gsub('"', '').strip}
+
 
     return allowed_hosts
   end

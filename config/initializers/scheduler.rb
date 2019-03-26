@@ -26,6 +26,8 @@ def run_update
           response = controller.get_occrp_joomla_articles({'language' => language, 'categories' => boolean})
         when :wordpress
           response = Wordpress.articles({'language' => language, 'categories' => boolean})
+        when :drupal
+          response = Drupal.articles({'language' => language, 'categories' => boolean})
         when :newscoop
           response = Newscoop.articles({'language' => language, 'categories' => boolean})
         when :cins_codeigniter
@@ -53,7 +55,7 @@ end
 
 unless defined?(Rails::Console) || File.split($0).last == 'rake'
   s.every '1m' do
-    run_update
+    #run_update
   end
 end
 
