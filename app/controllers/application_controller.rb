@@ -48,10 +48,7 @@ class ApplicationController < ActionController::Base
 
   def passthrough_image url
     cached = true
-<<<<<<< HEAD
-    image_response = Rails.cache.fetch(url, expires_in: 5.minutes) do
-      raw_response = HTTParty.get(url)
-=======
+
 
     image_response = Rails.cache.fetch(url, expires_in: 5.minutes) do
       url_encoded = url
@@ -78,7 +75,7 @@ class ApplicationController < ActionController::Base
        mime_type = fm.buffer(raw_response.body) 
        content_type = mime_type
       end
->>>>>>> drupal
+
       image_response = {body: raw_response.body, content_type: raw_response.headers['content-type']}
       cached = false
       image_response

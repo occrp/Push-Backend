@@ -66,10 +66,9 @@ data/dump.rdb
 /.docker/backups/*
 !/.docker/backups/.keep
 
-<<<<<<< HEAD
 /.vagrant
 /.idea
 =======
 # Because macOS
 .DS_Store
->>>>>>> drupal
+
