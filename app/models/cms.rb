@@ -128,7 +128,7 @@ class CMS < ActiveRecord::Base
     elements = Nokogiri::HTML text
     elements.css('a').each do |link|
       
-     rewrite_link_url(link)
+    # rewrite_link_url(link)
      
     end
  
@@ -627,8 +627,10 @@ class CMS < ActiveRecord::Base
 
 
   def self.rewrite_url_for_ssl url, force = true
+    if(!url.nil?)
     if(!ENV['force_https'] || url.starts_with?("https://"))
       return url
+    end
     end
 
     if(url.starts_with?('http:'))
