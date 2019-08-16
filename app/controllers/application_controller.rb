@@ -59,7 +59,7 @@ class ApplicationController < ActionController::Base
       
       else 
         while url_encoded != URI.encode(url_encoded).gsub(DOUBLE_ESCAPED_EXPR, '%\1') do
-          #byebug
+          
           url_encoded = URI.encode(url_encoded).gsub(DOUBLE_ESCAPED_EXPR, '%\1')
         end
           
@@ -80,7 +80,7 @@ class ApplicationController < ActionController::Base
       cached = false
       image_response
     end
-    
+    #byebug
     logger.info("Cache for image #{url} hit: #{cached == true ? "true" : "false"}")
     return image_response
   end

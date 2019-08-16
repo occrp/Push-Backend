@@ -162,7 +162,7 @@ class Wordpress < CMS
 
 	def self.get_articles url, extras = {},  version = 1
 	    logger.debug("Calling: #{url}")
-
+	
 	    body = make_request url
 
 	    if(body['results'].nil?)
@@ -172,14 +172,20 @@ class Wordpress < CMS
 	  if(body['categories'].nil?)			
 		
 		body['results'].each do |article|
-			_, images, image_urls = self.extract_images_from_string article['body']
-		#	byebug
+			logger.debug("**** Image:  #{article['images']} for headline #{article['headline']} ****")
+
+			_, images, image_urls = self.extract_images_from_string article['body'], article['images'], article['image_urls']
+		    
 			article['images'] = images
 			article['image_urls'] = image_urls
+
+			logger.debug("Images: #{article['images']} from article #{article['headline']}")
+			#byebug
 		end
 
-  	    results = clean_up_response(body['results'], version)
-   	    results = clean_up_for_wordpress results
+		
+		   results = clean_up_response(body['results'], version)
+		   results = clean_up_for_wordpress results
   	  else
   	    results = {}
   	    body['categories'].each do |category|
@@ -189,12 +195,12 @@ class Wordpress < CMS
       	  	end
 
 			body['results'][category].each do |article|
-
+               
 				_, images, image_urls = self.extract_images_from_string article['body']
 
 				article['images'] = images
 				article['image_urls'] = image_urls
-
+				#byebug
 			end
 
 
