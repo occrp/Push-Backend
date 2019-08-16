@@ -11,7 +11,11 @@ class CMS < ActiveRecord::Base
 
   def self.clean_up_response articles = Array.new, version = 1.0
     articles.delete_if{|article| article['headline'].blank?}
+
+   
     articles.each do |article|
+
+      logger.debug("**** Image:  #{article['images']} for headline #{article['headline']} ****")
       # Clean up the bylines
       article['author'] = removeNewLines(article['author'])
       # If there is no body (which is very prevalent in the OCCRP data for some reason)
@@ -77,7 +81,7 @@ class CMS < ActiveRecord::Base
       if(published_date.nil?)
         published_date = DateTime.new(1970,01,01)
       end
-
+      logger.debug("Images: #{article['images']} from article #{article['headline']}")
       extract_images article
       
       # right now we only support dates on the mobile side, this will be time soon.
@@ -87,6 +91,7 @@ class CMS < ActiveRecord::Base
       article = extract_youtube_links article
       
       article['body'] = scrubiFramesFromHTMLString article['body']
+      
     end
 
     return articles
@@ -119,7 +124,6 @@ class CMS < ActiveRecord::Base
     #Yes, i'm aware this is repetitive code.
     
 
-    
     images.each do |image|
       raise "Image is nil when processing. Check your custom model, this should not happen." if image.nil?
       image = rewrite_image_url(image)
@@ -127,6 +131,7 @@ class CMS < ActiveRecord::Base
 
     elements = Nokogiri::HTML text
     elements.css('a').each do |link|
+      
       
      rewrite_link_url(link)
      
@@ -138,6 +143,7 @@ class CMS < ActiveRecord::Base
     elements.css('img').each do |image|
       
       begin
+        #byebug
         image = rewrite_image_url(image)
         image_address = image['url']
       rescue Exception => e
@@ -206,6 +212,7 @@ class CMS < ActiveRecord::Base
 
   def self.rewrite_link_url link
      link_address = link['href']
+     #logger.debug("Link address:  #{link_address}")
      link_address = rewrite_url_for_ssl link_address, false
      link['href'] = link_address
      return link
@@ -600,7 +607,7 @@ class CMS < ActiveRecord::Base
         raise "CMS type #{cms_type} not valid for this version of Push."
     end
 
-    logger.debug("parsing #{url}")
+    #logger.debug("parsing #{url}")
     uri = URI.parse(url)
 
     if(force_https)
@@ -627,8 +634,10 @@ class CMS < ActiveRecord::Base
 
 
   def self.rewrite_url_for_ssl url, force = true
+    if(!url.nil?)
     if(!ENV['force_https'] || url.starts_with?("https://"))
       return url
+    end
     end
 
     if(url.starts_with?('http:'))

@@ -1,6 +1,6 @@
-class JoomlaOccrp < CMS
+class Drupal < CMS
 
-
+	
 	def self.articles params
 		cache = true;
 	  cached_articles = Rails.cache.fetch("sections/#{params.to_s}", expires_in: 1.hour) do
@@ -12,6 +12,10 @@ class JoomlaOccrp < CMS
 		
 		  options = {}
 		articles = {}
+
+		articlesUrgent = {}
+		articlesActual = {}
+		articlesCompany = {}
 		
 		  categories_string = Setting.categories
 		  most_recent_articles = nil
@@ -29,19 +33,31 @@ class JoomlaOccrp < CMS
 		  
 		  most_recent_articles = articles(most_recent_articles_params)[:results]
 		  end
-  
-		  url = get_url language, "index.php?option=com_push&format=json&view=articles", options
+
+			url = get_url language, "articles/urgent?", options
+			urlActual = get_url language, "articles/actual?", options
+			urlCompany = get_url language, "articles/company?", options
 
 			articles = get_articles url
-			
-			if language == 'ru'
-				articles['categoriesOrder'] = { "НОВОСТИ" => "1", "ГЛАВНАЯ" => "2", "РАССЛЕДОВАНИЯ" => "3" } 
-			  
+			articlesActual = get_articles urlActual
+			articlesCompany = get_articles urlCompany
+
+
+
+			if language == 'tj'
+				articles['categoriesOrder'] = { "Фаврӣ" => "1", "Муҳим" => "2", "Навгонии ширкатҳо" => "3" } 
+				#articles['categoriesOrder'] = { "Фаврӣ" : "0" , "Муҳим" : "1" , "Навгонии ширкатҳо" : "2"}
+				 articles['categories'] = [ "Фаврӣ", "Муҳим", "Навгонии ширкатҳо"]
+				 articles[:results] = {"Фаврӣ":articles[:results], "Муҳим":articlesActual[:results], "Навгонии ширкатҳо":articlesCompany[:results]}
+			 elsif language == 'ru'
+				articles['categoriesOrder'] = { "Срочно" => "1", "Актуально" => "2", "Новости компаний" => "3" } 
+			   articles['categories'] = ["Срочно", "Актуально", "Новости компаний"]
+			   articles[:results] = {"Срочно":articles[:results], "Актуально":articlesActual[:results], "Новости компаний":articlesCompany[:results]}
 			 else
-				articles['categoriesOrder'] = { "Home" => "1", "Daily" => "2", "Investigations" => "3" } 
+				articles['categoriesOrder'] = { "Urgent" => "1", "Actual" => "2", "Company" => "3" } 
+			   articles['categories'] = ["Urgent", "Actual", "Company"]
+			   articles[:results] = {"Urgent":articles[:results], "Actual":articlesActual[:results], "Company":articlesCompany[:results]}
       end
-
-
 
 
 
@@ -82,14 +98,14 @@ class JoomlaOccrp < CMS
 	private
 
 	def self.get_url language, path, options = {}
-		url = ENV['occrp_joomla_url'] 
+		url = ENV['drupal_url'] 
 		
 	    
  	    url_string = "#{url}?#{path}"
 
 	    # If there is more than one language specified (or any language at all for backwards compatibility)
 	    if(languages().count > 1 && languages().include?(language))
-		   url_string = "#{url}/#{language}/#{path}"
+		   url_string = "#{url}#{path}lang=#{language}&limit=10"
   	  end
 	    
 	    if(!ENV['wp_super_cached_donotcachepage'].blank?)
@@ -105,8 +121,8 @@ class JoomlaOccrp < CMS
 
 	def self.make_request url
 		logger.debug("Making request to #{url}")
-  		response = HTTParty.get(URI.encode(url))
-    
+  		response = HTTParty.get(URI.encode(url), :verify => false)
+        #byebug
     begin
 	    body = JSON.parse response.body
 	  rescue => exception
@@ -125,19 +141,22 @@ class JoomlaOccrp < CMS
 
 	    body = make_request url
 
+			#byebug
 	    if(body['results'].nil?)
 	    	body['results'] = Array.new
 	    end
       
 	  if(body['categories'].nil?)			
-		
-		body['results'].each do |article|
-			_, images, image_urls = self.extract_images_from_string article['description']
-		#	byebug
-			article['images'] = images
-			article['image_urls'] = image_urls
+    
+        
+        body['results'].each do |article|
+		  self.extract_images article
+			#article['images'] = images
+			#article['image_urls'] = image_urls
+			
 		end
 
+	
   	    results = clean_up_response(body['results'], version)
    	    results = clean_up_for_wordpress results
   	  else
@@ -150,7 +169,7 @@ class JoomlaOccrp < CMS
 
 			body['results'][category].each do |article|
 
-				_, images, image_urls = self.extract_images_from_string article['description']
+				_, images, image_urls = self.extract_images article
 
 				article['images'] = images
 				article['image_urls'] = image_urls
@@ -160,13 +179,13 @@ class JoomlaOccrp < CMS
 
     	    results[category] = clean_up_response(body['results'][category], version)
 			results[category] = clean_up_for_wordpress results[category]
-			
+			logger.debug "hello"
     	  end    	  
   	  end
-
+      
 	    response = {start_date: "19700101",
 	               end_date: DateTime.now.strftime("%Y%m%d"),
-	               total_results: results.size,
+	               total_results: 3,
 	               page: "1",
 	               results: results
 	              }
@@ -199,8 +218,9 @@ class JoomlaOccrp < CMS
 
 			article['headline'] = HTMLEntities.new.decode(article['headline'])
 
-			#
-			article['url'] = URI.join(base_url, article['id'])
+			
+            article['url'] = "#{base_url}/#{article['id']}" #base_url article['id']
+            
 			article['body'] = CMS.normalizeSpacing article['body']
 		end
 
@@ -208,4 +228,26 @@ class JoomlaOccrp < CMS
 		
 	    return articles
 	end
+
+ 	def self.search params
+ 		language = language_parameter params['language']
+
+ 	    query = params['q']
+
+			 
+ 	    google_search_engine_id = ENV['google_search_engine_id']
+ 		if(!google_search_engine_id.blank?)
+ 			logger.debug "Searching google with id: #{google_search_engine_id}"
+ 			articles_list = search_google_custom query, google_search_engine_id
+ 			url = get_url "noauth/articles/search?what=#{articles_list.join(',')}", language
+ 		else
+				 url = get_url language, "articles/search?what=#{query}&"
+				 
+ 		end
+		 #byebug
+ 		return get_articles url, {query: query}
+ 	end
+
+
+
 end

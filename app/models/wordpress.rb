@@ -43,10 +43,16 @@ class Wordpress < CMS
   	    
   	    articles["categories"].insert(0, translate_phrase("most_recent", language))
   	  end
-  	  
+			if language == 'rs'
+				articles['categoriesOrder'] = { "Vesti" => "1", "Blog" => "2", "Istraživanja" => "3" } 
+				
+			 else
+				articles['categoriesOrder'] = { "News" => "1", "Investigations" => "2" } 
+			end
+			
   	  articles
     end
-    
+
     logger.debug("/articles.json #{params.to_s} Cache hit") if cache == true
     logger.debug("/articles.json #{params.to_s} Cache missed") if cache == false
   
@@ -155,28 +161,52 @@ class Wordpress < CMS
 	end
 
 	def self.get_articles url, extras = {},  version = 1
-
 	    logger.debug("Calling: #{url}")
-
+	
 	    body = make_request url
 
 	    if(body['results'].nil?)
 	    	body['results'] = Array.new
 	    end
       
-      if(body['categories'].nil?)
-  	    results = clean_up_response(body['results'], version)
-   	    results = clean_up_for_wordpress results
+	  if(body['categories'].nil?)			
+		
+		body['results'].each do |article|
+			logger.debug("**** Image:  #{article['images']} for headline #{article['headline']} ****")
+
+			_, images, image_urls = self.extract_images_from_string article['body'], article['images'], article['image_urls']
+		    
+			article['images'] = images
+			article['image_urls'] = image_urls
+
+			logger.debug("Images: #{article['images']} from article #{article['headline']}")
+			#byebug
+		end
+
+		
+		   results = clean_up_response(body['results'], version)
+		   results = clean_up_for_wordpress results
   	  else
   	    results = {}
   	    body['categories'].each do |category|
     	    if(body['results'][category].blank?)
-      	    results[category] = []
-      	    next
-      	  end
+      	    	results[category] = []
+      	    	next
+      	  	end
+
+			body['results'][category].each do |article|
+               
+				_, images, image_urls = self.extract_images_from_string article['body']
+
+				article['images'] = images
+				article['image_urls'] = image_urls
+				#byebug
+			end
+
 
     	    results[category] = clean_up_response(body['results'][category], version)
-    	    results[category] = clean_up_for_wordpress results[category]
+			results[category] = clean_up_for_wordpress results[category]
+			
     	  end    	  
   	  end
 
@@ -193,6 +223,7 @@ class Wordpress < CMS
 	    response = response.merge(extras)
 	    return response
 	end
+
 
 	def self.language_parameter language
 	    if(!language.blank?)

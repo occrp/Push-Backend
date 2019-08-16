@@ -20,11 +20,16 @@ class ArticlesController < ApplicationController
         @response = CinsCodeigniter.articles(params)
       when :blox
         @response = Blox.articles(params)
-    end
+      when :drupal
     
+        @response = Drupal.articles(params)
+    end
+      
     respond_to do |format|
       format.json
     end
+
+    #byebug
 
   end
 
@@ -42,6 +47,8 @@ class ArticlesController < ApplicationController
         @response = CinsCodeigniter.search(params)
       when :blox
         @response = Blox.search(params)
+      when :drupal
+        @response = Drupal.search(params)
     end 
     
     respond_to do |format|
@@ -95,6 +102,8 @@ class ArticlesController < ApplicationController
         @response = CinsCodeigniter.article(params)
       when :blox
         @response = Blox.article(params)
+      when :drupal
+        @response = Drupal.article(params)
     end 
     
     respond_to do |format|
@@ -462,7 +471,7 @@ class ArticlesController < ApplicationController
         raise "CMS type #{cms_type} not valid for this version of Push."
     end
 
-    logger.debug("parsing #{url}")
+   
     uri = URI.parse(url)
     url = uri.scheme + "://" + uri.host
     return url
