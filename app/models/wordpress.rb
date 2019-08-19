@@ -164,7 +164,7 @@ class Wordpress < CMS
 	    logger.debug("Calling: #{url}")
 	
 	    body = make_request url
-
+		logger.debug("Body: #{body} BodyEnd")
 	    if(body['results'].nil?)
 	    	body['results'] = Array.new
 	    end
@@ -179,7 +179,7 @@ class Wordpress < CMS
 			article['images'] = images
 			article['image_urls'] = image_urls
 
-			logger.debug("Images: #{article['images']} from article #{article['headline']}")
+			logger.debug("Images: #{images} from article #{article['headline']}")
 			#byebug
 		end
 
