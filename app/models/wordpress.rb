@@ -30,8 +30,11 @@ class Wordpress < CMS
     	end
 
 	    url = get_url "push-occrp=true&occrp_push_type=articles", language, options
-	   
-	    articles = get_articles url
+
+		#This is being called twice as i find out in function. What I suspect is consolidated_categories being loaded to late.
+		articles = get_articles url
+		
+
   	  if(!most_recent_articles.nil? && !Setting.show_most_recent_articles.nil?)
         # There maybe a bug where an array is returned, even if categories are enabled
         if(articles[:results].is_a?(Array))
@@ -164,29 +167,40 @@ class Wordpress < CMS
 	    logger.debug("Calling: #{url}")
 	
 	    body = make_request url
-		logger.debug("Body: #{body} BodyEnd")
+		#logger.debug("Body: #{body} BodyEnd")
 	    if(body['results'].nil?)
 	    	body['results'] = Array.new
 	    end
-      
-	  if(body['categories'].nil?)			
-		
-		body['results'].each do |article|
-			logger.debug("**** Image:  #{article['images']} for headline #{article['headline']} ****")
+		byebug
+		logger.debug("Byebug")
 
+		#It gets here twice
+	  if(body['categories'].nil?)			
+		byebug
+		logger.debug("Byebug 1")
+		#Once here
+		body['results'].each do |article|
+			#logger.debug("**** Image:  #{article['images']} for headline #{article['headline']} ****")
+
+		
 			_, images, image_urls = self.extract_images_from_string article['body'], article['images'], article['image_urls']
 		    
 			article['images'] = images
 			article['image_urls'] = image_urls
 
-			logger.debug("Images: #{images} from article #{article['headline']}")
+
+			#logger.debug("Images: #{images} from article #{article['headline']}")
 			#byebug
 		end
 
 		
 		   results = clean_up_response(body['results'], version)
 		   results = clean_up_for_wordpress results
-  	  else
+		else
+			#And once here
+			#Also on rs? added in url there is redirection try test.krik.rs
+			byebug
+			logger.debug("Byebug 2")
   	    results = {}
   	    body['categories'].each do |category|
     	    if(body['results'][category].blank?)
@@ -194,13 +208,14 @@ class Wordpress < CMS
       	    	next
       	  	end
 
+
 			body['results'][category].each do |article|
                
 				_, images, image_urls = self.extract_images_from_string article['body']
 
 				article['images'] = images
 				article['image_urls'] = image_urls
-				#byebug
+				
 			end
 
 

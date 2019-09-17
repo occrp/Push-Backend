@@ -15,7 +15,7 @@ class CMS < ActiveRecord::Base
    
     articles.each do |article|
 
-      logger.debug("**** Image:  #{article['images']} for headline #{article['headline']} ****")
+      #logger.debug("**** Image:  #{article['images']} for headline #{article['headline']} ****")
       # Clean up the bylines
       article['author'] = removeNewLines(article['author'])
       # If there is no body (which is very prevalent in the OCCRP data for some reason)
@@ -81,7 +81,7 @@ class CMS < ActiveRecord::Base
       if(published_date.nil?)
         published_date = DateTime.new(1970,01,01)
       end
-      logger.debug("Images: #{article['images']} from article #{article['headline']}")
+      #logger.debug("Images: #{article['images']} from article #{article['headline']}")
       extract_images article
       
       # right now we only support dates on the mobile side, this will be time soon.
@@ -112,6 +112,8 @@ class CMS < ActiveRecord::Base
   # an array
   def self.extract_images_from_string text, images = [], image_urls = []
 
+    #byebug
+    #logger.debug("Images: #{images} from article 1")
     # Extract all image urls in the article and put them into a single array.
     # if(article['images'] == nil)
     #   article['images'] = []
@@ -128,7 +130,7 @@ class CMS < ActiveRecord::Base
       raise "Image is nil when processing. Check your custom model, this should not happen." if image.nil?
       image = rewrite_image_url(image)
     end
-
+    #logger.debug("Images: #{images} from article 2")
     elements = Nokogiri::HTML text
     elements.css('a').each do |link|
       
@@ -178,7 +180,7 @@ class CMS < ActiveRecord::Base
         images << image_object
       end
 
-
+      #logger.debug("Images: #{images} from article 3")
       # this is for modifying the urls in the article itself
       # It's a mess, refactor this please
       rewritten_url =  image_address
@@ -205,7 +207,7 @@ class CMS < ActiveRecord::Base
     end
 
     image_urls = proxied_image_urls
-
+    #logger.debug("Images: #{images} from article 4")
     return text, images, image_urls
   end
   
