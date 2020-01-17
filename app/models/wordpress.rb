@@ -129,7 +129,11 @@ class Wordpress < CMS
 
 	    # If there is more than one language specified (or any language at all for backwards compatibility)
 	    if(languages().count > 1 && languages().include?(language))
+   	    if language == 'rs'
+            url_string = "#{url}?#{path}"
+            else
    	    url_string = "#{url}/#{language}?#{path}"
+            end
   	  end
 	    
 	    if(!ENV['wp_super_cached_donotcachepage'].blank?)
