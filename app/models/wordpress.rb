@@ -6,6 +6,9 @@ class Wordpress < CMS
       cache = false;
       
     	language = language_parameter params['language']
+        if language == 'sr'
+            language = 'rs'
+        end
     	language = default_language if language.blank?
       raise "Requested language is not enabled"	if !languages().include?(language)
       
