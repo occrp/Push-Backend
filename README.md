@@ -1,5 +1,16 @@
+
 # Push-Backend
 ## Introduction
+This is part of OCCRP Push project that is created to generate mobile apps for different newspaper organizations in just couple of hours.
+Push project is composed of:
+- Generator Script
+- Plugins for different cms's
+- Push-Backend
+- Android app
+- iOS app
+
+Push project contains also NewNode framework that is used for decentralized networking. 
+
 This operates as a middleman between the plugin installed on the CMS and the apps. It provides a consistant API for the mobile apps to connect to while also sanitizing, caching, routing and doing general best practices on the HTML coming out of the CMS.
 
 This app is set up to run on Docker, which handles 90% of the set up for the database and such. The main thing a user has to worry about is setting up the APNS (Apple Push Notification Service) and Firebase certs.
@@ -293,12 +304,3 @@ GET
 #### Parameters
 
 - _q_ (required): The query, html encoded, to search for.
-
-
-
-
-
-<<<<<<< HEAD
-
-=======
->>>>>>> 0930adbdfb041837e23849e58e3e4182238a5b74
